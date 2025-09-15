@@ -99,9 +99,22 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
+// Ensure uploads directory exists
+const fs = require('fs');
+const path = require('path');
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('Created uploads directory');
+}
+
 app.listen(PORT, () => {
   logger.info(`ACES Translation Server running on port ${PORT}`);
   console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📁 Uploads directory: ${uploadsDir}`);
+}).on('error', (err) => {
+  console.error('Server startup error:', err);
+  process.exit(1);
 });
 
 module.exports = app;
