@@ -2,9 +2,9 @@
   "name": "aces-translation-server",
   "version": "1.0.0",
   "description": "Backend server for ACES Translation Tool",
-  "main": "index.js",
+  "main": "test-server.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node test-server.js",
     "dev": "nodemon index.js"
   },
   "dependencies": {
