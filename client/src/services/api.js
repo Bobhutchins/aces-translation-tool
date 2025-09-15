@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || '/api',
+  baseURL: process.env.REACT_APP_API_URL || 'https://aces-translation-tool-backend.onrender.com/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
