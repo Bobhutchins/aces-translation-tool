@@ -29,18 +29,36 @@ case $choice in
         ./start.sh
         ;;
     2)
-        echo "☁️  Preparing for cloud deployment..."
+        echo "☁️  Cloud Deployment Setup"
+        echo "========================="
         echo ""
-        echo "📝 Before deploying, make sure you have:"
-        echo "  1. GitHub repository created"
-        echo "  2. Pushed your code to GitHub"
-        echo "  3. Anthropic API key ready"
+        echo "📝 Prerequisites:"
+        echo "  1. GitHub account (github.com)"
+        echo "  2. Vercel account (vercel.com) - free"
+        echo "  3. Railway account (railway.app) - free"
+        echo "  4. Your Anthropic API key"
+        echo ""
+        echo "🚀 Quick Start:"
+        echo "  1. Create GitHub repository"
+        echo "  2. Push this code to GitHub"
+        echo "  3. Deploy backend to Railway"
+        echo "  4. Deploy frontend to Vercel"
+        echo ""
+        echo "📖 Detailed instructions:"
+        echo "  See CLOUD_DEPLOYMENT.md for step-by-step guide"
         echo ""
         echo "🔗 Deployment URLs:"
         echo "  Frontend: https://vercel.com"
         echo "  Backend: https://railway.app"
         echo ""
-        echo "📖 See DEPLOYMENT.md for detailed instructions"
+        read -p "Do you want to open the deployment guide? (y/n): " open_guide
+        if [ "$open_guide" = "y" ] || [ "$open_guide" = "Y" ]; then
+            if command -v open &> /dev/null; then
+                open CLOUD_DEPLOYMENT.md
+            else
+                echo "Please open CLOUD_DEPLOYMENT.md in your text editor"
+            fi
+        fi
         ;;
     3)
         echo "🔨 Building for manual deployment..."
