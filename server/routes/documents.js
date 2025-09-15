@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 const { body, validationResult } = require('express-validator');
 const documentService = require('../services/documentService');
 const claudeService = require('../services/claudeService');
@@ -28,8 +29,8 @@ const storage = multer.diskStorage({
     cb(null, process.env.UPLOAD_PATH || './uploads');
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    const fileId = uuidv4();
+    cb(null, fileId + path.extname(file.originalname));
   }
 });
 
