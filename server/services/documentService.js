@@ -156,7 +156,7 @@ class DocumentService {
       );
 
       // Split text into manageable chunks for translation
-      const chunks = this.splitTextIntoChunks(extractedData.text, 2000);
+      const chunks = this.splitTextIntoChunks(extractedData.text, 1000);
 
       const processedDocument = {
         fileId: fileInfo.fileId,
@@ -184,7 +184,7 @@ class DocumentService {
   /**
    * Split text into chunks for translation
    */
-  splitTextIntoChunks(text, maxChunkSize = 2000) {
+  splitTextIntoChunks(text, maxChunkSize = 1000) {
     const sentences = text.split(/(?<=[.!?])\s+/);
     const chunks = [];
     let currentChunk = '';
@@ -200,6 +200,12 @@ class DocumentService {
 
     if (currentChunk.trim()) {
       chunks.push(currentChunk.trim());
+    }
+
+    // Limit the number of chunks to prevent timeout
+    if (chunks.length > 50) {
+      logger.warn(`Document has ${chunks.length} chunks, limiting to 50 for performance`);
+      return chunks.slice(0, 50);
     }
 
     return chunks;
