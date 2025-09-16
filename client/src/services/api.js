@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 // Create axios instance
 const api = axios.create({
   baseURL: 'https://aces-translation-tool-backend.onrender.com/api',
-  timeout: 30000,
+  timeout: 120000, // Increased to 2 minutes for large documents
   headers: {
     'Content-Type': 'application/json',
   },
