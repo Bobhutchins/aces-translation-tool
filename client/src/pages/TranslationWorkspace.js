@@ -95,17 +95,41 @@ const TranslationWorkspace = () => {
 
   const handleSave = async () => {
     try {
-      // Save translation
+      setLoading(true);
+      // TODO: Implement save to backend
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setIsEditing(false);
-      console.log('Translation saved');
+      toast.success('Translation saved successfully');
     } catch (error) {
       console.error('Save failed:', error);
+      toast.error('Failed to save translation');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleExport = () => {
-    // Export functionality
-    console.log('Exporting document');
+  const handleExport = async () => {
+    try {
+      setLoading(true);
+      // TODO: Implement export functionality
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Document exported successfully');
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast.error('Failed to export document');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    // Reset to original translation
+    loadDocument(id);
   };
 
   if (loading && !document) {
@@ -216,13 +240,34 @@ const TranslationWorkspace = () => {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Translation ({document?.targetLanguage})
               </h3>
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="btn-secondary"
-              >
-                <Edit3 className="h-4 w-4 mr-2" />
-                {isEditing ? 'Cancel' : 'Edit'}
-              </button>
+              <div className="flex items-center space-x-2">
+                {isEditing ? (
+                  <>
+                    <button
+                      onClick={handleCancel}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={loading}
+                      className="btn-primary"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={handleEdit}
+                    className="btn-secondary"
+                  >
+                    <Edit3 className="h-4 w-4 mr-2" />
+                    Edit
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           <div className="card-body">
@@ -231,7 +276,7 @@ const TranslationWorkspace = () => {
                 <textarea
                   value={translatedText}
                   onChange={(e) => setTranslatedText(e.target.value)}
-                  className="w-full h-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                  className="w-full h-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Enter translation..."
                 />
               ) : (
@@ -242,18 +287,14 @@ const TranslationWorkspace = () => {
                 </div>
               )}
             </div>
+            {isEditing && (
+              <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  💡 <strong>Editing Tips:</strong> Make sure to preserve the original meaning while ensuring the translation is natural and culturally appropriate for the target audience.
+                </p>
+              </div>
+            )}
           </div>
-          {isEditing && (
-            <div className="card-footer">
-              <button
-                onClick={handleSave}
-                className="btn-primary"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
