@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { CheckCircle, AlertCircle, Clock, Star, Filter, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, AlertCircle, Clock, Star, Filter, Search, Eye, Edit, Download, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const QualityControl = () => {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const mockTranslations = [
     {
@@ -57,6 +60,79 @@ const QualityControl = () => {
     return 'text-error-600';
   };
 
+  const handleSelectItem = (id) => {
+    setSelectedItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    const filteredItems = getFilteredTranslations();
+    setSelectedItems(
+      selectedItems.length === filteredItems.length 
+        ? [] 
+        : filteredItems.map(item => item.id)
+    );
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedItems.length === 0) {
+      toast.error('Please select items to approve');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      // TODO: Implement bulk approve API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success(`${selectedItems.length} items approved successfully`);
+      setSelectedItems([]);
+    } catch (error) {
+      toast.error('Failed to approve items');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (selectedItems.length === 0) {
+      toast.error('Please select items to reject');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      // TODO: Implement bulk reject API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success(`${selectedItems.length} items rejected successfully`);
+      setSelectedItems([]);
+    } catch (error) {
+      toast.error('Failed to reject items');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getFilteredTranslations = () => {
+    let filtered = mockTranslations;
+    
+    if (filter !== 'all') {
+      filtered = filtered.filter(item => item.status === filter);
+    }
+    
+    if (searchTerm) {
+      filtered = filtered.filter(item => 
+        item.documentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.sourceLanguage.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.targetLanguage.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -108,26 +184,73 @@ const QualityControl = () => {
             </button>
           </div>
         </div>
+        
+        {/* Bulk Actions */}
+        {selectedItems.length > 0 && (
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                {selectedItems.length} item(s) selected
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleBulkApprove}
+                  disabled={loading}
+                  className="btn-success"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Approve Selected
+                </button>
+                <button
+                  onClick={handleBulkReject}
+                  disabled={loading}
+                  className="btn-error"
+                >
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  Reject Selected
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Translation List */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="card-header">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Translations Pending Review
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Translations Pending Review
+            </h3>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={selectedItems.length === getFilteredTranslations().length && getFilteredTranslations().length > 0}
+                onChange={handleSelectAll}
+                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              />
+              <span className="text-sm text-gray-500">Select All</span>
+            </div>
+          </div>
         </div>
         <div className="divide-y divide-gray-200 dark:divide-gray-700">
-          {mockTranslations.map((translation) => (
+          {getFilteredTranslations().map((translation) => (
             <div key={translation.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700">
               <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                      {translation.documentName}
-                    </h4>
-                    {getStatusBadge(translation.status)}
-                  </div>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(translation.id)}
+                    onChange={() => handleSelectItem(translation.id)}
+                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                        {translation.documentName}
+                      </h4>
+                      {getStatusBadge(translation.status)}
+                    </div>
                   <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                     <span>{translation.sourceLanguage} → {translation.targetLanguage}</span>
                     <span>{translation.wordCount} words</span>
@@ -142,11 +265,26 @@ const QualityControl = () => {
                     </p>
                   </div>
                   <div className="flex space-x-2">
-                    <button className="btn-secondary">
+                    <button 
+                      className="btn-secondary"
+                      onClick={() => window.open(`/translation-workspace/${translation.id}`, '_blank')}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
                       Review
                     </button>
-                    <button className="btn-primary">
+                    <button 
+                      className="btn-success"
+                      onClick={() => handleBulkApprove([translation.id])}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
                       Approve
+                    </button>
+                    <button 
+                      className="btn-error"
+                      onClick={() => handleBulkReject([translation.id])}
+                    >
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      Reject
                     </button>
                   </div>
                 </div>
