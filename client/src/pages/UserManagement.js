@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Users, Plus, Edit, Trash2, Shield, UserCheck, UserX } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Plus, Edit, Trash2, Shield, UserCheck, UserX, Search, Filter, Mail, Phone, Calendar } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([
@@ -36,6 +37,20 @@ const UserManagement = () => {
   ]);
 
   const [showAddUser, setShowAddUser] = useState(false);
+  const [showEditUser, setShowEditUser] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [loading, setLoading] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    role: 'translator',
+    department: 'Translation Services',
+    phone: '',
+    isActive: true
+  });
 
   const getRoleBadge = (role) => {
     switch (role) {
@@ -50,6 +65,131 @@ const UserManagement = () => {
     }
   };
 
+  const handleAddUser = async () => {
+    if (!newUser.name.trim() || !newUser.email.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // TODO: Implement add user API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const user = {
+        id: Date.now(),
+        ...newUser,
+        lastLogin: null,
+        createdAt: new Date().toISOString()
+      };
+
+      setUsers(prev => [user, ...prev]);
+      setShowAddUser(false);
+      setNewUser({
+        name: '',
+        email: '',
+        role: 'translator',
+        department: 'Translation Services',
+        phone: '',
+        isActive: true
+      });
+      toast.success('User added successfully');
+    } catch (error) {
+      toast.error('Failed to add user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setShowEditUser(true);
+  };
+
+  const handleUpdateUser = async () => {
+    if (!editingUser.name.trim() || !editingUser.email.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // TODO: Implement update user API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setUsers(prev => prev.map(user => 
+        user.id === editingUser.id ? editingUser : user
+      ));
+      setShowEditUser(false);
+      setEditingUser(null);
+      toast.success('User updated successfully');
+    } catch (error) {
+      toast.error('Failed to update user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // TODO: Implement delete user API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setUsers(prev => prev.filter(user => user.id !== userId));
+      toast.success('User deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleUserStatus = async (userId) => {
+    setLoading(true);
+    try {
+      // TODO: Implement toggle user status API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { ...user, isActive: !user.isActive } : user
+      ));
+      toast.success('User status updated');
+    } catch (error) {
+      toast.error('Failed to update user status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getFilteredUsers = () => {
+    let filtered = users;
+    
+    if (searchTerm) {
+      filtered = filtered.filter(user => 
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.department.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (roleFilter !== 'all') {
+      filtered = filtered.filter(user => user.role === roleFilter);
+    }
+    
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(user => 
+        statusFilter === 'active' ? user.isActive : !user.isActive
+      );
+    }
+    
+    return filtered;
+  };
+
   const getStatusBadge = (isActive) => {
     return isActive ? (
       <span className="badge-success">Active</span>
@@ -58,19 +198,6 @@ const UserManagement = () => {
     );
   };
 
-  const handleToggleUserStatus = (userId) => {
-    setUsers(users.map(user => 
-      user.id === userId 
-        ? { ...user, isActive: !user.isActive }
-        : user
-    ));
-  };
-
-  const handleDeleteUser = (userId) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      setUsers(users.filter(user => user.id !== userId));
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -97,6 +224,45 @@ const UserManagement = () => {
             <Plus className="h-4 w-4 mr-2" />
             Add User
           </button>
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="input pl-10"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="select"
+            >
+              <option value="all">All Roles</option>
+              <option value="admin">Admin</option>
+              <option value="translator">Translator</option>
+              <option value="reviewer">Reviewer</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="select"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -186,7 +352,7 @@ const UserManagement = () => {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {users.map((user) => (
+              {getFilteredUsers().map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
@@ -212,18 +378,26 @@ const UserManagement = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
-                      <button className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
+                      <button 
+                        onClick={() => handleEditUser(user)}
+                        className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300"
+                        title="Edit User"
+                      >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button 
                         onClick={() => handleToggleUserStatus(user.id)}
+                        disabled={loading}
                         className="text-warning-600 hover:text-warning-900 dark:text-warning-400 dark:hover:text-warning-300"
+                        title={user.isActive ? "Deactivate User" : "Activate User"}
                       >
                         {user.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
                       </button>
                       <button 
                         onClick={() => handleDeleteUser(user.id)}
+                        disabled={loading}
                         className="text-error-600 hover:text-error-900 dark:text-error-400 dark:hover:text-error-300"
+                        title="Delete User"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -235,6 +409,222 @@ const UserManagement = () => {
           </table>
         </div>
       </div>
+
+      {/* Add User Modal */}
+      {showAddUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Add New User
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, name: e.target.value }))}
+                  className="input"
+                  placeholder="Enter full name..."
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
+                  className="input"
+                  placeholder="Enter email address..."
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Role
+                </label>
+                <select
+                  value={newUser.role}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value }))}
+                  className="select"
+                >
+                  <option value="translator">Translator</option>
+                  <option value="reviewer">Reviewer</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Department
+                </label>
+                <input
+                  type="text"
+                  value={newUser.department}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, department: e.target.value }))}
+                  className="input"
+                  placeholder="Enter department..."
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={newUser.phone}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, phone: e.target.value }))}
+                  className="input"
+                  placeholder="Enter phone number..."
+                />
+              </div>
+              
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={newUser.isActive}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, isActive: e.target.checked }))}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+                <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                  Active User
+                </label>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowAddUser(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddUser}
+                disabled={loading}
+                className="btn-primary"
+              >
+                {loading ? 'Adding...' : 'Add User'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditUser && editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Edit User
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  value={editingUser.name}
+                  onChange={(e) => setEditingUser(prev => ({ ...prev, name: e.target.value }))}
+                  className="input"
+                  placeholder="Enter full name..."
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  value={editingUser.email}
+                  onChange={(e) => setEditingUser(prev => ({ ...prev, email: e.target.value }))}
+                  className="input"
+                  placeholder="Enter email address..."
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Role
+                </label>
+                <select
+                  value={editingUser.role}
+                  onChange={(e) => setEditingUser(prev => ({ ...prev, role: e.target.value }))}
+                  className="select"
+                >
+                  <option value="translator">Translator</option>
+                  <option value="reviewer">Reviewer</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Department
+                </label>
+                <input
+                  type="text"
+                  value={editingUser.department}
+                  onChange={(e) => setEditingUser(prev => ({ ...prev, department: e.target.value }))}
+                  className="input"
+                  placeholder="Enter department..."
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={editingUser.phone || ''}
+                  onChange={(e) => setEditingUser(prev => ({ ...prev, phone: e.target.value }))}
+                  className="input"
+                  placeholder="Enter phone number..."
+                />
+              </div>
+              
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={editingUser.isActive}
+                  onChange={(e) => setEditingUser(prev => ({ ...prev, isActive: e.target.checked }))}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+                <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                  Active User
+                </label>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowEditUser(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateUser}
+                disabled={loading}
+                className="btn-primary"
+              >
+                {loading ? 'Updating...' : 'Update User'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
