@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Settings as SettingsIcon, User, Bell, Shield, Globe, Save } from 'lucide-react';
+import { Settings as SettingsIcon, User, Bell, Shield, Globe, Save, Check, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const Settings = () => {
   const { user, updateUser } = useAuth();
@@ -30,9 +31,48 @@ const Settings = () => {
     }
   });
 
-  const handleSave = (section) => {
-    console.log(`Saving ${section} settings:`, settings[section]);
-    // In a real app, this would save to the backend
+  const [loading, setLoading] = useState(false);
+  const [savedSections, setSavedSections] = useState(new Set());
+
+  const handleSave = async (section) => {
+    setLoading(true);
+    try {
+      // TODO: Implement save to backend API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setSavedSections(prev => new Set([...prev, section]));
+      toast.success(`${section.charAt(0).toUpperCase() + section.slice(1)} settings saved successfully`);
+      
+      // Clear the saved indicator after 3 seconds
+      setTimeout(() => {
+        setSavedSections(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(section);
+          return newSet;
+        });
+      }, 3000);
+    } catch (error) {
+      toast.error(`Failed to save ${section} settings`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSettingChange = (section, key, value) => {
+    setSettings(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [key]: value
+      }
+    }));
+    
+    // Remove from saved sections when changes are made
+    setSavedSections(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(section);
+      return newSet;
+    });
   };
 
   const tabs = [
@@ -104,10 +144,7 @@ const Settings = () => {
                     <input
                       type="text"
                       value={settings.profile.name}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        profile: { ...settings.profile, name: e.target.value }
-                      })}
+                      onChange={(e) => handleSettingChange('profile', 'name', e.target.value)}
                       className="input"
                     />
                   </div>
@@ -118,10 +155,7 @@ const Settings = () => {
                     <input
                       type="email"
                       value={settings.profile.email}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        profile: { ...settings.profile, email: e.target.value }
-                      })}
+                      onChange={(e) => handleSettingChange('profile', 'email', e.target.value)}
                       className="input"
                     />
                   </div>
@@ -132,20 +166,22 @@ const Settings = () => {
                     <input
                       type="text"
                       value={settings.profile.department}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        profile: { ...settings.profile, department: e.target.value }
-                      })}
+                      onChange={(e) => handleSettingChange('profile', 'department', e.target.value)}
                       className="input"
                     />
                   </div>
                 </div>
                 <button
                   onClick={() => handleSave('profile')}
+                  disabled={loading}
                   className="btn-primary"
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Profile
+                  {savedSections.has('profile') ? (
+                    <Check className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {savedSections.has('profile') ? 'Saved!' : loading ? 'Saving...' : 'Save Profile'}
                 </button>
               </div>
             )}
@@ -187,10 +223,15 @@ const Settings = () => {
                 </div>
                 <button
                   onClick={() => handleSave('notifications')}
+                  disabled={loading}
                   className="btn-primary"
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Notifications
+                  {savedSections.has('notifications') ? (
+                    <Check className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {savedSections.has('notifications') ? 'Saved!' : loading ? 'Saving...' : 'Save Notifications'}
                 </button>
               </div>
             )}
@@ -284,10 +325,15 @@ const Settings = () => {
                 </div>
                 <button
                   onClick={() => handleSave('preferences')}
+                  disabled={loading}
                   className="btn-primary"
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Preferences
+                  {savedSections.has('preferences') ? (
+                    <Check className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {savedSections.has('preferences') ? 'Saved!' : loading ? 'Saving...' : 'Save Preferences'}
                 </button>
               </div>
             )}
@@ -360,10 +406,15 @@ const Settings = () => {
                 </div>
                 <button
                   onClick={() => handleSave('security')}
+                  disabled={loading}
                   className="btn-primary"
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Security Settings
+                  {savedSections.has('security') ? (
+                    <Check className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {savedSections.has('security') ? 'Saved!' : loading ? 'Saving...' : 'Save Security Settings'}
                 </button>
               </div>
             )}
